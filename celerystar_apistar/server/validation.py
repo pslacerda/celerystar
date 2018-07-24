@@ -6,9 +6,9 @@ from celerystar_apistar.conneg import negotiate_content_type
 from celerystar_apistar.server.components import Component
 from celerystar_apistar.server.core import Route
 
-ValidatedPathParams = typing.NewType('ValidatedPathParams', dict)
-ValidatedQueryParams = typing.NewType('ValidatedQueryParams', dict)
-ValidatedRequestData = typing.TypeVar('ValidatedRequestData')
+ValidatedPathParams = typing.NewType("ValidatedPathParams", dict)
+ValidatedQueryParams = typing.NewType("ValidatedQueryParams", dict)
+ValidatedRequestData = typing.TypeVar("ValidatedRequestData")
 
 
 class RequestDataComponent(Component):
@@ -18,13 +18,11 @@ class RequestDataComponent(Component):
     def can_handle_parameter(self, parameter: inspect.Parameter):
         return parameter.annotation is http.RequestData
 
-    def resolve(self,
-                content: http.Body,
-                headers: http.Headers):
+    def resolve(self, content: http.Body, headers: http.Headers):
         if not content:
             return None
 
-        content_type = headers.get('Content-Type')
+        content_type = headers.get("Content-Type")
 
         try:
             codec = negotiate_content_type(self.codecs, content_type)
@@ -38,9 +36,9 @@ class RequestDataComponent(Component):
 
 
 class ValidatePathParamsComponent(Component):
-    def resolve(self,
-                route: Route,
-                path_params: http.PathParams) -> ValidatedPathParams:
+    def resolve(
+        self, route: Route, path_params: http.PathParams
+    ) -> ValidatedPathParams:
         path_fields = route.link.get_path_fields()
 
         validator = validators.Object(
@@ -48,7 +46,7 @@ class ValidatePathParamsComponent(Component):
                 (field.name, field.schema if field.schema else validators.Any())
                 for field in path_fields
             ],
-            required=[field.name for field in path_fields]
+            required=[field.name for field in path_fields],
         )
 
         try:
@@ -59,9 +57,9 @@ class ValidatePathParamsComponent(Component):
 
 
 class ValidateQueryParamsComponent(Component):
-    def resolve(self,
-                route: Route,
-                query_params: http.QueryParams) -> ValidatedQueryParams:
+    def resolve(
+        self, route: Route, query_params: http.QueryParams
+    ) -> ValidatedQueryParams:
         query_fields = route.link.get_query_fields()
 
         validator = validators.Object(
@@ -69,7 +67,7 @@ class ValidateQueryParamsComponent(Component):
                 (field.name, field.schema if field.schema else validators.Any())
                 for field in query_fields
             ],
-            required=[field.name for field in query_fields if field.required]
+            required=[field.name for field in query_fields if field.required],
         )
 
         try:
@@ -83,9 +81,7 @@ class ValidateRequestDataComponent(Component):
     def can_handle_parameter(self, parameter: inspect.Parameter):
         return parameter.annotation is ValidatedRequestData
 
-    def resolve(self,
-                route: Route,
-                data: http.RequestData):
+    def resolve(self, route: Route, data: http.RequestData):
         body_field = route.link.get_body_field()
 
         if not body_field or not body_field.schema:
@@ -103,11 +99,15 @@ class PrimitiveParamComponent(Component):
     def can_handle_parameter(self, parameter: inspect.Parameter):
         return parameter.annotation in (str, int, float, bool, parameter.empty)
 
-    def resolve(self,
-                parameter: inspect.Parameter,
-                path_params: ValidatedPathParams,
-                query_params: ValidatedQueryParams):
-        params = path_params if (parameter.name in path_params) else query_params
+    def resolve(
+        self,
+        parameter: inspect.Parameter,
+        path_params: ValidatedPathParams,
+        query_params: ValidatedQueryParams,
+    ):
+        params = (
+            path_params if (parameter.name in path_params) else query_params
+        )
         has_default = parameter.default is not parameter.empty
         allow_null = parameter.default is None
 
@@ -116,12 +116,12 @@ class PrimitiveParamComponent(Component):
             str: validators.String(allow_null=allow_null),
             int: validators.Integer(allow_null=allow_null),
             float: validators.Number(allow_null=allow_null),
-            bool: validators.Boolean(allow_null=allow_null)
+            bool: validators.Boolean(allow_null=allow_null),
         }[parameter.annotation]
 
         validator = validators.Object(
             properties=[(parameter.name, param_validator)],
-            required=[] if has_default else [parameter.name]
+            required=[] if has_default else [parameter.name],
         )
 
         try:
@@ -135,9 +135,7 @@ class CompositeParamComponent(Component):
     def can_handle_parameter(self, parameter: inspect.Parameter):
         return issubclass(parameter.annotation, types.Type)
 
-    def resolve(self,
-                parameter: inspect.Parameter,
-                data: ValidatedRequestData):
+    def resolve(self, parameter: inspect.Parameter, data: ValidatedRequestData):
         try:
             return parameter.annotation(data)
         except validators.ValidationError as exc:
@@ -150,5 +148,5 @@ VALIDATION_COMPONENTS = (
     ValidateQueryParamsComponent(),
     ValidateRequestDataComponent(),
     PrimitiveParamComponent(),
-    CompositeParamComponent()
+    CompositeParamComponent(),
 )

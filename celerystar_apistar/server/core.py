@@ -5,8 +5,17 @@ from celerystar_apistar import types, validators
 from celerystar_apistar.document import Document, Field, Link, Section
 
 
-class Route():
-    def __init__(self, url, method, handler, name=None, documented=True, standalone=False, link=None):
+class Route:
+    def __init__(
+        self,
+        url,
+        method,
+        handler,
+        name=None,
+        documented=True,
+        standalone=False,
+        link=None,
+    ):
         self.url = url
         self.method = method
         self.handler = handler
@@ -21,14 +30,16 @@ class Route():
     def generate_link(self, url, method, handler, name):
         fields = self.generate_fields(url, method, handler)
         encoding = None
-        if any([f.location == 'body' for f in fields]):
-            encoding = 'application/json'
-        return Link(url=url, method=method, name=name, encoding=encoding, fields=fields)
+        if any([f.location == "body" for f in fields]):
+            encoding = "application/json"
+        return Link(
+            url=url, method=method, name=name, encoding=encoding, fields=fields
+        )
 
     def generate_fields(self, url, method, handler):
         fields = []
         path_names = [
-            item.strip('{}').lstrip('+') for item in re.findall('{[^}]*}', url)
+            item.strip("{}").lstrip("+") for item in re.findall("{[^}]*}", url)
         ]
         parameters = inspect.signature(handler).parameters
         for name, param in parameters.items():
@@ -37,36 +48,40 @@ class Route():
                     param.empty: None,
                     int: validators.Integer(),
                     float: validators.Number(),
-                    str: validators.String()
+                    str: validators.String(),
                 }[param.annotation]
-                field = Field(name=name, location='path', schema=schema)
+                field = Field(name=name, location="path", schema=schema)
                 fields.append(field)
 
             elif param.annotation in (param.empty, int, float, bool, str):
                 if param.default is param.empty:
                     kwargs = {}
                 elif param.default is None:
-                    kwargs = {'default': None, 'allow_null': True}
+                    kwargs = {"default": None, "allow_null": True}
                 else:
-                    kwargs = {'default': param.default}
+                    kwargs = {"default": param.default}
                 schema = {
                     param.empty: None,
                     int: validators.Integer(**kwargs),
                     float: validators.Number(**kwargs),
                     bool: validators.Boolean(**kwargs),
-                    str: validators.String(**kwargs)
+                    str: validators.String(**kwargs),
                 }[param.annotation]
-                field = Field(name=name, location='query', schema=schema)
+                field = Field(name=name, location="query", schema=schema)
                 fields.append(field)
 
             elif issubclass(param.annotation, types.Type):
-                field = Field(name=name, location='body', schema=param.annotation.validator)
+                field = Field(
+                    name=name,
+                    location="body",
+                    schema=param.annotation.validator,
+                )
                 fields.append(field)
 
         return fields
 
 
-class Include():
+class Include:
     def __init__(self, url, name, routes, documented=True, section=None):
         self.url = url
         self.name = name
@@ -104,7 +119,7 @@ def generate_document(routes):
     return Document(content=content)
 
 
-def bind(document, bindings, name_prefix=''):
+def bind(document, bindings, name_prefix=""):
     """
     Given a document and a map of {"section:link": handler} return a
     list of `Include` and `Route` to use for routing the application.
@@ -113,19 +128,17 @@ def bind(document, bindings, name_prefix=''):
     for item in document.content:
         if isinstance(item, Link):
             handler = bindings[name_prefix + item.name]
-            routes.append(Route(
-                url=item.url,
-                method=item.method,
-                name=item.name,
-                handler=handler,
-                link=item
-            ))
+            routes.append(
+                Route(
+                    url=item.url,
+                    method=item.method,
+                    name=item.name,
+                    handler=handler,
+                    link=item,
+                )
+            )
         elif isinstance(item, Section):
-            section_name_prefix = name_prefix + item.name + ':'
+            section_name_prefix = name_prefix + item.name + ":"
             children = bind(item, bindings, section_name_prefix)
-            routes.append(Include(
-                url='',
-                name=item.name,
-                routes=children
-            ))
+            routes.append(Include(url="", name=item.name, routes=children))
     return routes

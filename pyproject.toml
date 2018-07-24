@@ -1,0 +1,46 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[tool.flit.metadata]
+module = "celerystar"
+author = "Pedro Lacerda"
+author-email = "pslacerda+dev@gmail.com"
+home-page = "https://github.com/gerenciagram/celerystar"
+keywords = [
+    "apistar",
+    "celery",
+    "dependency injection",
+]
+description-file = "README.md"
+requires = [
+    "celery (>=4.1.1<5)",
+    "dataclasses",
+
+    # "apistar (==0.4.3)",
+    "coreapi (>=2.3.3<3)",
+    "jinja2 (>=2.10<3)",
+    "pytest (>=3.6.0<4)",
+    "requests (>=2.18.4<3)",
+    "werkzeug (>=0.14.1<1)",
+    "whitenoise (>=3.3.1<4)",
+]
+dev-requires = [
+    "pytest",
+    "twine",
+    "black",
+    "isort",
+]
+ classifiers=[
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: System :: Networking",
+    "Programming Language :: Python :: 3.6",
+]
+
+[tool.black]
+line-length = 80
+py36 = true
+include = "(celerystar/.*|example|tests)\.py$"
+quiet = true

@@ -4,7 +4,7 @@ import inspect
 from celerystar_apistar.exceptions import ConfigurationError
 
 
-class BaseInjector():
+class BaseInjector:
     def run(self, func, state):
         raise NotImplementedError()
 
@@ -15,14 +15,14 @@ class Injector(BaseInjector):
     def __init__(self, components, initial):
         self.components = components
         self.initial = initial
-        self.reverse_initial = {
-            val: key for key, val in initial.items()
-        }
+        self.reverse_initial = {val: key for key, val in initial.items()}
         self.resolver_cache = {}
 
-    def resolve_function(self, func, output_name=None, seen_state=None, parent_parameter=None):
+    def resolve_function(
+        self, func, output_name=None, seen_state=None, parent_parameter=None
+    ):
         if output_name is None:
-            output_name = 'response'
+            output_name = "response"
         if seen_state is None:
             seen_state = set(self.initial)
 
@@ -33,8 +33,8 @@ class Injector(BaseInjector):
         parameters = inspect.signature(func).parameters.values()
         for parameter in parameters:
             # The 'response' keyword always indicates the previous return value.
-            if parameter.name == 'response':
-                kwargs['response'] = 'response'
+            if parameter.name == "response":
+                kwargs["response"] = "response"
                 continue
 
             # Check if the parameter class exists in 'initial'.
@@ -61,7 +61,7 @@ class Injector(BaseInjector):
                             func=component.resolve,
                             output_name=identity,
                             seen_state=seen_state,
-                            parent_parameter=parameter
+                            parent_parameter=parameter,
                         )
                     break
             else:
@@ -71,7 +71,7 @@ class Injector(BaseInjector):
         is_async = asyncio.iscoroutinefunction(func)
         if is_async and not self.allow_async:
             msg = 'Function "%s" may not be async.'
-            raise ConfigurationError(msg % (func.__name__, ))
+            raise ConfigurationError(msg % (func.__name__,))
 
         step = (func, is_async, kwargs, consts, output_name)
         steps.append(step)
@@ -98,7 +98,7 @@ class Injector(BaseInjector):
             func_kwargs.update(consts)
             state[output_name] = func(**func_kwargs)
 
-        return state['response']
+        return state["response"]
 
 
 class ASyncInjector(Injector):
@@ -120,4 +120,4 @@ class ASyncInjector(Injector):
             else:
                 state[output_name] = func(**func_kwargs)
 
-        return state['response']
+        return state["response"]

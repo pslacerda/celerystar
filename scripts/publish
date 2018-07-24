@@ -1,0 +1,25 @@
+#!/bin/bash -eux
+
+scripts/lint
+scripts/test
+
+test ! git status --porcelain 2>/dev/null | grep -q "^??" && {
+    echo "There are untracked files!"
+    exit 1
+}
+test ! ! git diff --quiet --ignore-submodules HEAD > /dev/null 2>&1 && {
+    echo "There are uncommited changes!"
+    exit 2
+}
+
+exit
+find celerystar celerystar_apistar -type f -name "*.py[co]" -delete
+find celerystar celerystar_apistar -type d -name __pycache__ -delete
+
+python setup.py sdist
+twine upload dist/*
+
+git tag -a $VERSION -m "version $VERSION"
+git push --tags
+
+rm -rf dist

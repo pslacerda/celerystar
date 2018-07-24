@@ -8,7 +8,7 @@ class BasicAuthentication(HTTPBasicAuth):
 class TokenAuthentication(AuthBase):
     allow_cookies = False
 
-    def __init__(self, token, scheme='Bearer'):
+    def __init__(self, token, scheme="Bearer"):
         """
         * Use an unauthenticated client, and make a request to obtain a token.
         * Create an authenticated client using eg. `TokenAuthentication(token="<token>")`
@@ -17,7 +17,7 @@ class TokenAuthentication(AuthBase):
         self.scheme = scheme
 
     def __call__(self, request):
-        request.headers['Authorization'] = '%s %s' % (self.scheme, self.token)
+        request.headers["Authorization"] = "%s %s" % (self.scheme, self.token)
         return request
 
 
@@ -28,8 +28,9 @@ class SessionAuthentication(AuthBase):
     * Make an initial request to obtain a CSRF token.
     * Make a login request.
     """
+
     allow_cookies = True
-    safe_methods = ('GET', 'HEAD', 'OPTIONS', 'TRACE')
+    safe_methods = ("GET", "HEAD", "OPTIONS", "TRACE")
 
     def __init__(self, csrf_cookie_name=None, csrf_header_name=None):
         self.csrf_cookie_name = csrf_cookie_name
@@ -41,8 +42,12 @@ class SessionAuthentication(AuthBase):
             self.csrf_token = response.cookies[self.csrf_cookie_name]
 
     def __call__(self, request):
-        if self.csrf_token and self.csrf_header_name is not None and (request.method not in self.safe_methods):
+        if (
+            self.csrf_token
+            and self.csrf_header_name is not None
+            and (request.method not in self.safe_methods)
+        ):
             request.headers[self.csrf_header_name] = self.csrf_token
         if self.csrf_cookie_name is not None:
-            request.register_hook('response', self.store_csrf_token)
+            request.register_hook("response", self.store_csrf_token)
         return request

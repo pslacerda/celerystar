@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+isort --check-only --recursive --atomic
+black --check .
+mypy --ignore-missing-imports celerystar example.py

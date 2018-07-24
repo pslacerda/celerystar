@@ -4,17 +4,18 @@ from celerystar_apistar import exceptions, validators
 from celerystar_apistar.client import transports
 
 
-class Client():
-    def __init__(self, document, auth=None, decoders=None, headers=None, session=None):
+class Client:
+    def __init__(
+        self, document, auth=None, decoders=None, headers=None, session=None
+    ):
         self.document = document
         self.transport = self.init_transport(auth, decoders, headers, session)
 
-    def init_transport(self, auth=None, decoders=None, headers=None, session=None):
+    def init_transport(
+        self, auth=None, decoders=None, headers=None, session=None
+    ):
         return transports.HTTPTransport(
-            auth=auth,
-            decoders=decoders,
-            headers=headers,
-            session=session
+            auth=auth, decoders=decoders, headers=headers, session=session
         )
 
     def lookup_link(self, name: str):
@@ -32,14 +33,16 @@ class Client():
             raise exceptions.RequestError("URL missing scheme '%s'." % url)
 
         if scheme not in self.transport.schemes:
-            raise exceptions.RequestError("Unsupported URL scheme '%s'." % scheme)
+            raise exceptions.RequestError(
+                "Unsupported URL scheme '%s'." % scheme
+            )
 
         for field in link.get_path_fields():
             value = str(params[field.name])
-            if '{%s}' % field.name in url:
-                url = url.replace('{%s}' % field.name, quote(value, safe=''))
-            elif '{+%s}' % field.name in url:
-                url = url.replace('{+%s}' % field.name, quote(value, safe='/'))
+            if "{%s}" % field.name in url:
+                url = url.replace("{%s}" % field.name, quote(value, safe=""))
+            elif "{+%s}" % field.name in url:
+                url = url.replace("{+%s}" % field.name, quote(value, safe="/"))
 
         return url
 
@@ -62,7 +65,7 @@ class Client():
         validator = validators.Object(
             properties={field.name: validators.Any() for field in link.fields},
             required=[field.name for field in link.fields if field.required],
-            additional_properties=False
+            additional_properties=False,
         )
         validator.validate(params)
 
@@ -76,5 +79,5 @@ class Client():
             url,
             query_params=query_params,
             content=content,
-            encoding=encoding
+            encoding=encoding,
         )

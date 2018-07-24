@@ -12,22 +12,12 @@ class _CustomEncoder(json.JSONEncoder):
 
 
 def encode_json(data, indent=False):
-    kwargs = {
-        'ensure_ascii': False,
-        'allow_nan': False,
-        'cls': _CustomEncoder
-    }
+    kwargs = {"ensure_ascii": False, "allow_nan": False, "cls": _CustomEncoder}
     if indent:
-        kwargs.update({
-            'indent': None,
-            'separators': (',', ':')
-        })
+        kwargs.update({"indent": None, "separators": (",", ":")})
     else:
-        kwargs.update({
-            'indent': 4,
-            'separators': (',', ': ')
-        })
-    return json.dumps(data, **kwargs).encode('utf-8')
+        kwargs.update({"indent": 4, "separators": (",", ": ")})
+    return json.dumps(data, **kwargs).encode("utf-8")
 
 
 def encode_jsonschema(validator, to_data_structure=False):
